@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 public final class Model {
 
+    private Model(){}
+
     private static ArrayList<Robot> robots = new ArrayList<>();
     private static Robot activeRobot;
     public static boolean paused;
@@ -32,6 +34,7 @@ public final class Model {
     {
         Model.setM_targetPositionX(p.x);
         Model.setM_targetPositionY(p.y);
+        activeRobot.getNewPath();
     }
 
     public static ArrayList<Rectangle> getRect() {
@@ -67,7 +70,8 @@ public final class Model {
             activeRobot = robots.get(0);
         else
             activeRobot = robots.get(index + 1);
-        Logger.debug("Сдедующий робот активен");
+        Logger.debug("Следующий робот активен");
+        activeRobot.getNewPath();
     }
 
     public static void pause(){
@@ -82,5 +86,13 @@ public final class Model {
             e.setVelocity(Robot.getMaxVelocity());
             paused = false;
         });
+    }
+
+    public static void Restart() {
+        rect.clear();
+        robots.clear();
+        setTargetPosition(new Point(150, 100));
+        activeRobot = new Robot();
+        robots.add(activeRobot);
     }
 }

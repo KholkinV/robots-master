@@ -47,15 +47,33 @@ public class GameVisualizer extends JPanel
                 }
             }, 0, 10);
 
-        /*addMouseListener(new MouseAdapter()
+        addMouseListener(new MouseAdapter()
         {
             public void mouseClicked(MouseEvent e)
             {
-                setTargetPosition(e.getPoint());
+                Model.setTargetPosition(e.getPoint());
                 Logger.debug("Изменена позиция цели");
                 repaint();
             }
-        });*/
+
+            Point firstPoint;
+            Point secondPoint;
+            public void mousePressed(MouseEvent e){
+                firstPoint = e.getPoint();
+            }
+
+            public void mouseReleased(MouseEvent e){
+                secondPoint = e.getPoint();
+                int x = firstPoint.x <= secondPoint.x ? firstPoint.x : secondPoint.x;
+                int y = firstPoint.y <= secondPoint.y ? firstPoint.y : secondPoint.y;
+                Rectangle rect = new Rectangle(x, y,
+                        Math.abs(secondPoint.x - firstPoint.x), Math.abs(secondPoint.y - firstPoint.y));
+                Model.addRect(rect);
+                Model.getRobots().forEach(r -> r.getNewPath());
+                Logger.debug("Нарисован прямоугольник");
+                repaint();
+            }
+        });
         setDoubleBuffered(true);
     }
 

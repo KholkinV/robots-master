@@ -4,6 +4,10 @@ import log.Logger;
 import model.Model;
 
 import java.awt.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.concurrent.BlockingDeque;
 
 import static java.awt.geom.Point2D.distance;
 
@@ -14,7 +18,7 @@ public class Robot {
     private volatile double m_robotDirection = 0;
     private static final double maxVelocity = 0.1;
     private static final double maxAngularVelocity = 0.001;
-
+    private ArrayDeque<Cell> path = breadthSearch(new Point((int)m_robotPositionX, (int)m_robotPositionY));
     public void setVelocity(double velocity) {
         this.velocity = velocity;
     }
@@ -35,13 +39,9 @@ public class Robot {
     public static double getMaxVelocity() {
         return maxVelocity;
     }
-    public static double getMaxAngularVelocity() {
-        return maxAngularVelocity;
-    }
 
     private void moveRobot(double velocity, double angularVelocity, double duration)
     {
-
         velocity = applyLimits(velocity, 0, maxVelocity);
         angularVelocity = applyLimits(angularVelocity, -maxAngularVelocity, maxAngularVelocity);
         double newX = m_robotPositionX + velocity / angularVelocity *
@@ -64,24 +64,27 @@ public class Robot {
         m_robotDirection = newDirection;
     }
 
-    private void rotateRobot(){
+    private void rotateRobot(Point target){
         double angleToTarget = angleTo(m_robotPositionX, m_robotPositionY,
-                Model.getM_targetPositionX(), Model.getM_targetPositionY());
+                target.x, target.y);
         double angularVelocity = 0;
+        if (angleToTarget > m_robotDirection)
+        {
+            angularVelocity = maxAngularVelocity;
+        }
+        if (angleToTarget < m_robotDirection)
+        {
+            angularVelocity = -maxAngularVelocity;
+        }
         while(Math.abs(angleToTarget - m_robotDirection) > 0.01){
-            if (angleToTarget > m_robotDirection)
-            {
-                angularVelocity = maxAngularVelocity;
-            }
-            if (angleToTarget < m_robotDirection)
-            {
-                angularVelocity = -maxAngularVelocity;
-            }
-
             angleToTarget = angleTo(m_robotPositionX, m_robotPositionY,
-                    Model.getM_targetPositionX(), Model.getM_targetPositionY());
+                    target.x, target.y);
             moveRobot(0, angularVelocity, 10);
         }
+    }
+
+    public void getNewPath(){
+        path = breadthSearch(new Point((int)m_robotPositionX, (int)m_robotPositionY));
     }
 
     public void onModelUpdateEvent()
@@ -92,8 +95,11 @@ public class Robot {
         {
             return;
         }
-        rotateRobot();
-        moveRobot(velocity, 0, 10);
+        if(!path.isEmpty()){
+            Cell nextStep = path.remove();
+            rotateRobot(new Point(nextStep.x, nextStep.y));
+            moveRobot(velocity, 0, 10);
+        }
     }
 
     private static double distance(double x1, double y1, double x2, double y2)
@@ -131,5 +137,64 @@ public class Robot {
             angle -= 2*Math.PI;
         }
         return angle;
+    }
+
+    private ArrayDeque<Cell> breadthSearch(Point start){
+        ArrayDeque<Cell> path = new ArrayDeque<>();
+        ArrayDeque<Cell> queue = new ArrayDeque<>();
+        HashSet<Cell> visited = new HashSet<>();
+        queue.add(new Cell(start.x, start.y));
+
+        while(!queue.isEmpty()){
+            Cell p = queue.remove();
+            if(visited.contains(p)) continue;
+            visited.add(p);
+
+            ArrayList<Cell> neighbours = getNeighbours(p);
+            if(neighbours.size() != 0){
+                for (Cell neighbour: neighbours){
+                    if(neighbour.x == Model.getM_targetPositionX() &&
+                            neighbour.y == Model.getM_targetPositionY()){
+                        Cell temp = neighbour;
+                        while(temp.x != start.x || temp.y != start.y) {
+                            path.addFirst(temp);
+                            temp = temp.getPrevious();
+                        }
+                        return path;
+                    }
+                    if(!visited.contains(neighbour)){
+                        queue.add(neighbour);
+                    }
+                }
+            }
+
+        }
+        return path;
+    }
+
+    private ArrayList<Cell> getNeighbours(Cell location){
+        Point[] neighbour = new Point[]{
+                new Point(location.x, location.y - 1),
+                new Point(location.x + 1, location.y),
+                new Point(location.x, location.y + 1),
+                new Point(location.x - 1, location.y)
+        };
+        boolean flag = false;
+        ArrayList<Cell> result = new ArrayList<>();
+        ArrayList<Rectangle> rect = Model.getRect();
+        for (Point p : neighbour){
+            if(p.x >= 0 && p.y >= 0 && p.x < 800 && p.y < 800){
+                for (Rectangle e : rect) {
+                    if (e.contains(p)) flag = true;
+                }
+                if(!flag) {
+                    Cell cell = new Cell(p.x, p.y);
+                    cell.setPrevious(location);
+                    result.add(cell);
+                    flag = false;
+                }
+            }
+        }
+        return result;
     }
 }

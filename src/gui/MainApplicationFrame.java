@@ -2,15 +2,11 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Rectangle2D;
-
 import javax.swing.*;
-
 import log.Logger;
 import logic.Robot;
 import model.Model;
-import sun.misc.JavaAWTAccess;
-import sun.security.util.SecurityConstants;
+
 
 /**
  * Что требуется сделать:
@@ -40,13 +36,6 @@ public class MainApplicationFrame extends JFrame
         gameWindow.setSize(800,  800);
         gameWindow.setLocation(400, 10);
         gameWindow.setJMenuBar(gameWindowBar());
-        gameWindow.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                Model.setTargetPosition(e.getPoint());
-                Logger.debug("Изменена позиция цели");
-            }
-        });
 
         addWindow(gameWindow);
 
@@ -100,10 +89,10 @@ public class MainApplicationFrame extends JFrame
     private JMenuBar gameWindowBar(){
         JMenuBar menuBar = new JMenuBar();
 
-        menuBar.add(drawRectangleButton());
         menuBar.add(pauseButton());
         menuBar.add(addRobotButton());
         menuBar.add(changeActiveRobotButton());
+        menuBar.add(restartButton());
         return menuBar;
     }
 
@@ -174,29 +163,6 @@ public class MainApplicationFrame extends JFrame
         return pauseButton;
     }
 
-    private JButton drawRectangleButton(){
-        JButton drawRectangleButton = new JButton("Нарисовать прямоугольник");
-        drawRectangleButton.addActionListener(l ->
-        {
-            gameWindow.addMouseListener(new MouseAdapter()
-            {
-                Point firstPoint;
-                Point secondPoint;
-                public void mousePressed(MouseEvent e)
-                {
-                    firstPoint = e.getPoint();
-                }
-                public void mouseReleased(MouseEvent e){
-                    secondPoint = e.getPoint();
-                    Rectangle rect = new Rectangle(firstPoint.x, firstPoint.y,
-                            Math.abs(secondPoint.x - firstPoint.x), Math.abs(secondPoint.y - firstPoint.y));
-                    Model.addRect(rect);
-                }
-            });
-        });
-        return drawRectangleButton;
-    }
-
     private JButton addRobotButton(){
         JButton addRobotButton = new JButton("Добавить робота");
         addRobotButton.addActionListener(e ->
@@ -212,6 +178,14 @@ public class MainApplicationFrame extends JFrame
             Model.changeActiveRobot();
         });
         return changeActiveRobotButton;
+    }
+
+    private JButton restartButton(){
+        JButton restartButton = new JButton("Рестарт");
+        restartButton.addActionListener(e ->{
+            Model.Restart();
+        });
+        return restartButton;
     }
 
     private void setLookAndFeel(String className)
