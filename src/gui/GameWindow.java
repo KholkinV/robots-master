@@ -4,6 +4,7 @@ import logic.Robot;
 import model.Model;
 
 import java.awt.*;
+import java.io.Serializable;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JPanel;

@@ -9,6 +9,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -28,7 +29,7 @@ public class GameVisualizer extends JPanel
     
     public GameVisualizer()
     {
-        Model.init();
+        RobotsProgram.model.init();
 
         m_timer.schedule(new TimerTask()
             {
@@ -43,7 +44,7 @@ public class GameVisualizer extends JPanel
                 @Override
                 public void run()
                 {
-                    Model.getActiveRobot().onModelUpdateEvent();
+                    RobotsProgram.model.getActiveRobot().onModelUpdateEvent();
                 }
             }, 0, 10);
 
@@ -51,7 +52,7 @@ public class GameVisualizer extends JPanel
         {
             public void mouseClicked(MouseEvent e)
             {
-                Model.setTargetPosition(e.getPoint());
+                RobotsProgram.model.getTarget().setTargetPosition(e.getPoint());
                 Logger.debug("Изменена позиция цели");
                 repaint();
             }
@@ -68,9 +69,8 @@ public class GameVisualizer extends JPanel
                 int y = firstPoint.y <= secondPoint.y ? firstPoint.y : secondPoint.y;
                 Rectangle rect = new Rectangle(x, y,
                         Math.abs(secondPoint.x - firstPoint.x), Math.abs(secondPoint.y - firstPoint.y));
-                Model.addRect(rect);
-                Model.getRobots().forEach(r -> r.getNewPath());
-                Logger.debug("Нарисован прямоугольник");
+                RobotsProgram.model.addRect(rect);
+                RobotsProgram.model.getRobots().forEach(r -> r.getNewPath());
                 repaint();
             }
         });
@@ -94,11 +94,12 @@ public class GameVisualizer extends JPanel
     {
         super.paint(g);
         Graphics2D g2d = (Graphics2D)g;
-        Model.getRobots().forEach(e -> {
+        RobotsProgram.model.getRobots().forEach(e -> {
             drawRobot(g2d, round(e.getM_robotPositionX()), round(e.getM_robotPositionY()), e.getM_robotDirection(), e);
         });
-        drawTarget(g2d, Model.getM_targetPositionX(), Model.getM_targetPositionY());
-        Model.getRect().forEach(e -> ((Graphics2D) g).draw(e));
+        drawTarget(g2d, RobotsProgram.model.getTarget().getM_targetPositionX(),
+                RobotsProgram.model.getTarget().getM_targetPositionY());
+        RobotsProgram.model.getRect().forEach(e -> ((Graphics2D) g).draw(e));
     }
     
     private static void fillOval(Graphics g, int centerX, int centerY, int diam1, int diam2)

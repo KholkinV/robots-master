@@ -2,6 +2,9 @@ package gui;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import javax.swing.*;
 import log.Logger;
 import logic.Robot;
@@ -14,7 +17,7 @@ import model.Model;
  * Следует разделить его на серию более простых методов (или вообще выделить отдельный класс).
  *
  */
-public class MainApplicationFrame extends JFrame
+public class MainApplicationFrame extends JFrame implements Serializable
 {
     private final JDesktopPane desktopPane = new JDesktopPane();
     GameWindow gameWindow;
@@ -46,6 +49,23 @@ public class MainApplicationFrame extends JFrame
                         "", JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE) == JOptionPane.YES_NO_OPTION)
                 {
+                    try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("model.dat")))
+                    {
+                        oos.writeObject(RobotsProgram.model);
+                        oos.flush();
+                        oos.close();
+                    }
+                    catch(Exception ex){
+                        System.out.println(ex.getMessage());
+                    }
+                    try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("frame.dat"))){
+                        oos.writeObject(RobotsProgram.frame);
+                        oos.flush();
+                        oos.close();
+                    }
+                    catch (Exception ex){
+                        System.out.println(ex.getMessage());
+                    }
                     MainApplicationFrame.this.setVisible(false);
                     MainApplicationFrame.this.dispose();
                 }
@@ -142,9 +162,9 @@ public class MainApplicationFrame extends JFrame
     private JButton closerButton(){
         JButton closerButton = new JButton("Выход");
 
-        closerButton.addActionListener(e ->
-                processWindowEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING)));
-
+        closerButton.addActionListener(e -> {
+            processWindowEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+        });
         return closerButton;
     }
 
@@ -152,11 +172,11 @@ public class MainApplicationFrame extends JFrame
         JButton pauseButton = new JButton("Пауза");
         pauseButton.addActionListener(e -> {
             if(!Model.paused) {
-                Model.pause();
+                RobotsProgram.model.pause();
                 Logger.debug("Пауза");
                 pauseButton.setText("Продолжить");
             } else {
-                Model.unpause();
+                RobotsProgram.model.unpause();
                 pauseButton.setText("Пауза");
             }
         });
@@ -167,7 +187,7 @@ public class MainApplicationFrame extends JFrame
         JButton addRobotButton = new JButton("Добавить робота");
         addRobotButton.addActionListener(e ->
         {
-            Model.addRobot(new Robot());
+            RobotsProgram.model.addRobot(new Robot());
         });
         return addRobotButton;
     }
@@ -175,7 +195,7 @@ public class MainApplicationFrame extends JFrame
     private JButton changeActiveRobotButton(){
         JButton changeActiveRobotButton = new JButton("Следующий робот");
         changeActiveRobotButton.addActionListener(e -> {
-            Model.changeActiveRobot();
+            RobotsProgram.model.changeActiveRobot();
         });
         return changeActiveRobotButton;
     }
@@ -183,7 +203,7 @@ public class MainApplicationFrame extends JFrame
     private JButton restartButton(){
         JButton restartButton = new JButton("Рестарт");
         restartButton.addActionListener(e ->{
-            Model.Restart();
+            RobotsProgram.model.Restart();
         });
         return restartButton;
     }

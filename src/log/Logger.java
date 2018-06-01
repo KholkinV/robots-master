@@ -1,14 +1,15 @@
 package log;
 
-public final class Logger
+import java.io.Serializable;
+
+public final class Logger implements Serializable
 {
     private static final LogWindowSource defaultLogSource;
     static {
         defaultLogSource = new LogWindowSource(100);
     }
     
-    private Logger()
-    {
+    private Logger(){
     }
 
     public static void debug(String strMessage)

@@ -1,5 +1,6 @@
 package log;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -12,7 +13,7 @@ import java.util.Collections;
  * величиной m_iQueueLength (т.е. реально нужна очередь сообщений 
  * ограниченного размера) 
  */
-public class LogWindowSource
+public class LogWindowSource implements Serializable
 {
     private int m_iQueueLength;
     

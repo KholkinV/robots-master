@@ -1,9 +1,11 @@
 package logic;
 
+import gui.RobotsProgram;
 import log.Logger;
 import model.Model;
 
 import java.awt.*;
+import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,7 +13,7 @@ import java.util.concurrent.BlockingDeque;
 
 import static java.awt.geom.Point2D.distance;
 
-public class Robot {
+public class Robot implements Serializable{
 
     private volatile double m_robotPositionX = 100;
     private volatile double m_robotPositionY = 100;
@@ -84,29 +86,18 @@ public class Robot {
     }
 
     public void getNewPath(){
-        path = breadthSearch(new Point((int)m_robotPositionX, (int)m_robotPositionY));
+        Thread thread = new Thread(() -> path = breadthSearch(new Point((int)m_robotPositionX, (int)m_robotPositionY)));
+        thread.start();
     }
 
     public void onModelUpdateEvent()
     {
-        double distance = distance(Model.getM_targetPositionX(), Model.getM_targetPositionY(),
-                m_robotPositionX, m_robotPositionY);
-        if (distance < 0.5)
-        {
-            return;
-        }
+
         if(!path.isEmpty()){
             Cell nextStep = path.remove();
             rotateRobot(new Point(nextStep.x, nextStep.y));
             moveRobot(velocity, 0, 10);
         }
-    }
-
-    private static double distance(double x1, double y1, double x2, double y2)
-    {
-        double diffX = x1 - x2;
-        double diffY = y1 - y2;
-        return Math.sqrt(diffX * diffX + diffY * diffY);
     }
 
     private static double angleTo(double fromX, double fromY, double toX, double toY)
@@ -153,8 +144,8 @@ public class Robot {
             ArrayList<Cell> neighbours = getNeighbours(p);
             if(neighbours.size() != 0){
                 for (Cell neighbour: neighbours){
-                    if(neighbour.x == Model.getM_targetPositionX() &&
-                            neighbour.y == Model.getM_targetPositionY()){
+                    if(neighbour.x == RobotsProgram.model.getTarget().getM_targetPositionX() &&
+                            neighbour.y == RobotsProgram.model.getTarget().getM_targetPositionY()){
                         Cell temp = neighbour;
                         while(temp.x != start.x || temp.y != start.y) {
                             path.addFirst(temp);
@@ -181,7 +172,7 @@ public class Robot {
         };
         boolean flag = false;
         ArrayList<Cell> result = new ArrayList<>();
-        ArrayList<Rectangle> rect = Model.getRect();
+        ArrayList<Rectangle> rect = RobotsProgram.model.getRect();
         for (Point p : neighbour){
             if(p.x >= 0 && p.y >= 0 && p.x < 800 && p.y < 800){
                 for (Rectangle e : rect) {
