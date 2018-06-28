@@ -8,6 +8,7 @@ import java.awt.*;
 import java.io.Serializable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.concurrent.BlockingDeque;
 
@@ -20,7 +21,7 @@ public class Robot implements Serializable{
     private volatile double m_robotDirection = 0;
     private static final double maxVelocity = 0.1;
     private static final double maxAngularVelocity = 0.001;
-    private ArrayDeque<Cell> path = breadthSearch(new Point((int)m_robotPositionX, (int)m_robotPositionY));
+    private ArrayDeque<Point> path = null;
     public void setVelocity(double velocity) {
         this.velocity = velocity;
     }
@@ -92,10 +93,8 @@ public class Robot implements Serializable{
 
     public void onModelUpdateEvent()
     {
-
-        if(!path.isEmpty()){
-            Cell nextStep = path.remove();
-            rotateRobot(new Point(nextStep.x, nextStep.y));
+        if(path != null && !path.isEmpty()){
+            rotateRobot(path.remove());
             moveRobot(velocity, 0, 10);
         }
     }
@@ -130,58 +129,59 @@ public class Robot implements Serializable{
         return angle;
     }
 
-    private ArrayDeque<Cell> breadthSearch(Point start){
-        ArrayDeque<Cell> path = new ArrayDeque<>();
-        ArrayDeque<Cell> queue = new ArrayDeque<>();
-        HashSet<Cell> visited = new HashSet<>();
-        queue.add(new Cell(start.x, start.y));
+    private ArrayDeque<Point> breadthSearch(Point start){
+        ArrayDeque<Point> path = new ArrayDeque<>();
+        ArrayDeque<Point> queue = new ArrayDeque<>();
+        HashSet<Point> visited = new HashSet<>();
+        HashMap<Point, Point> map = new HashMap<>();
+        queue.add(start);
 
         while(!queue.isEmpty()){
-            Cell p = queue.remove();
+            Point p = queue.remove();
             if(visited.contains(p)) continue;
             visited.add(p);
 
-            ArrayList<Cell> neighbours = getNeighbours(p);
+            ArrayList<Point> neighbours = getNeighbours(p);
             if(neighbours.size() != 0){
-                for (Cell neighbour: neighbours){
+                for (Point neighbour: neighbours){
                     if(neighbour.x == RobotsProgram.model.getTarget().getM_targetPositionX() &&
                             neighbour.y == RobotsProgram.model.getTarget().getM_targetPositionY()){
-                        Cell temp = neighbour;
+                        map.put(neighbour, p);
+                        Point temp = neighbour;
+                        path.addFirst(temp);
                         while(temp.x != start.x || temp.y != start.y) {
-                            path.addFirst(temp);
-                            temp = temp.getPrevious();
+                            path.addFirst(map.get(temp));
+                            temp = map.get(temp);
                         }
                         return path;
                     }
                     if(!visited.contains(neighbour)){
                         queue.add(neighbour);
+                        map.put(neighbour, p);
                     }
                 }
             }
-
         }
         return path;
     }
 
-    private ArrayList<Cell> getNeighbours(Cell location){
-        Point[] neighbour = new Point[]{
+    private ArrayList<Point> getNeighbours(Point location){
+        Point[] neighbours = new Point[]{
                 new Point(location.x, location.y - 1),
                 new Point(location.x + 1, location.y),
                 new Point(location.x, location.y + 1),
                 new Point(location.x - 1, location.y)
         };
         boolean flag = false;
-        ArrayList<Cell> result = new ArrayList<>();
+        ArrayList<Point> result = new ArrayList<>();
         ArrayList<Rectangle> rect = RobotsProgram.model.getRect();
-        for (Point p : neighbour){
+        for (Point p : neighbours){
             if(p.x >= 0 && p.y >= 0 && p.x < 800 && p.y < 800){
                 for (Rectangle e : rect) {
                     if (e.contains(p)) flag = true;
                 }
                 if(!flag) {
-                    Cell cell = new Cell(p.x, p.y);
-                    cell.setPrevious(location);
-                    result.add(cell);
+                    result.add(p);
                     flag = false;
                 }
             }

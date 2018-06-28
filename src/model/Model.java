@@ -31,6 +31,7 @@ public final class Model implements Serializable{
     public void init(){
         activeRobot = new Robot();
         robots.add(activeRobot);
+        activeRobot.getNewPath();
     }
 
     public ArrayList<Robot> getRobots() {

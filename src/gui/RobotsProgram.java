@@ -35,10 +35,8 @@ public class RobotsProgram
             System.out.println(ex.getMessage());
         }
         SwingUtilities.invokeLater(() -> {
-
             frame.pack();
             frame.setVisible(true);
             frame.setExtendedState(Frame.MAXIMIZED_BOTH);
-
         });
     }}
